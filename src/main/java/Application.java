@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -24,7 +25,7 @@ public class Application {
         return defaultProps;
     }
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws IOException, SQLException, IllegalAccessException, InvocationTargetException {
         Properties defaultProps = getProperties();
         DBConnectionProperties dbConnectionProperties = new DBConnectionProperties(
                 defaultProps.getProperty("liteorm.datasource.driverClassName"),
@@ -33,8 +34,8 @@ public class Application {
                 defaultProps.getProperty("liteorm.datasource.url"));
         System.out.println("db connection properties = " + dbConnectionProperties);
         DBConnection connection = new DBConnection(dbConnectionProperties);
-        connection.createTable(Account.class);
+        //connection.createTable(Account.class);
         Account myAccount = new Account("Eric", "abcd");
-
+        connection.insert(myAccount);
     }
 }

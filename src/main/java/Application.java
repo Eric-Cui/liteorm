@@ -25,7 +25,6 @@ public class Application {
     }
 
     public static void main(String[] args) throws IOException, SQLException {
-        Account myAccount = new Account("Eric", "abcd");
         Properties defaultProps = getProperties();
         DBConnectionProperties dbConnectionProperties = new DBConnectionProperties(
                 defaultProps.getProperty("liteorm.datasource.driverClassName"),
@@ -35,5 +34,7 @@ public class Application {
         System.out.println("db connection properties = " + dbConnectionProperties);
         DBConnection connection = new DBConnection(dbConnectionProperties);
         connection.createTable(Account.class);
+        Account myAccount = new Account("Eric", "abcd");
+
     }
 }

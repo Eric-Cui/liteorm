@@ -45,13 +45,12 @@ public class DBConnection {
                 System.out.println("Annotation found " + m);
             }
         }*/
-        String tableName = tableClass.getSimpleName();
-        System.out.println("simple name = " + tableClass.getSimpleName()); // Account
-        System.out.println("name = " + tableClass.getName()); //Entity.Account
-        System.out.println("Creating table " + tableName);
+        //String tableName = tableClass.getSimpleName();
         if (tableClass.isAnnotationPresent(DatabaseTable.class)) {
             System.out.println("table class is annotated with DatabaseTable");
-            String query = "create table " + tableName + " ";
+            DatabaseTable tableAnnotation = (DatabaseTable)tableClass.getAnnotation(DatabaseTable.class);
+            String tableName = tableAnnotation.tableName();
+            String query = "create table if not exists " + tableName + " ";
             Field[] fields = tableClass.getDeclaredFields();
             int fieldsLength = fields.length;
             for (int i = 0; i < fieldsLength; i++ ) {

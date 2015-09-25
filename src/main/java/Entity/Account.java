@@ -10,9 +10,13 @@ import DBAnnotation.DatabaseTable;
 public class Account {
 
 
-    @DatabaseField(id = true)
+    @DatabaseField(generatedId = true)
+    private int id;
+
+    @DatabaseField(columnName = "name1", nullable = false)
     private String name;
 
+    @DatabaseField(columnName = "password1")
     private String password;
 
     public Account() {

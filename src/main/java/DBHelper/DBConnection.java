@@ -1,5 +1,6 @@
 package DBHelper;
 
+import DBAnnotation.DatabaseField;
 import DBAnnotation.DatabaseTable;
 import Entity.Account;
 
@@ -25,8 +26,8 @@ public class DBConnection {
     private Connection mConnection;
     private static Map<Class<?>, String> ormTypeMapping = new HashMap<Class<?>, String>();
     static {
-        ormTypeMapping.put(String.class, "varchar(50");
-        ormTypeMapping.put(Integer.class, "integer");
+        ormTypeMapping.put(String.class, "varchar(50)");
+        ormTypeMapping.put(int.class, "integer");
     }
 
 
@@ -50,26 +51,61 @@ public class DBConnection {
         //String tableName = tableClass.getSimpleName();
         if (tableClass.isAnnotationPresent(DatabaseTable.class)) {
             System.out.println("table class is annotated with DatabaseTable");
+
             DatabaseTable tableAnnotation = (DatabaseTable)tableClass.getAnnotation(DatabaseTable.class);
-            String tableName = tableAnnotation.tableName();
+
+            String tableName = tableAnnotation.tableName(); // get tableName from @DatabaseTable(tableName = "accounts")
+
             StringBuilder query = new StringBuilder();
             query.append("create table if not exists " + tableName + " ");
-            Field[] fields = tableClass.getDeclaredFields();
+
+            Field[] fields = tableClass.getDeclaredFields(); // use reflection to get the defined fields of the class
             int fieldsLength = fields.length;
+            String primaryKey = null;
             for (int i = 0; i < fieldsLength; i++ ) {
                 Field field = fields[i];
-                String fieldName = field.getName();
-                Class<?> fieldType = field.getType();
+                String fieldName = field.getName(); // id, name, ,password
+                Class<?> fieldType = field.getType(); //int, String
                 System.out.println("field name = " + fieldName + " type = " + fieldType);
-                query.append(((i == 0) ? "(" : "") + fieldName + " " + ormTypeMapping.get(fieldType)  + ((i == fieldsLength-1) ? "));" : "),"));
+                String fieldDesc = null;
+
+                if (field.isAnnotationPresent(DatabaseField.class)) {
+                    DatabaseField fieldAnnoation = (DatabaseField)field.getAnnotation(DatabaseField.class);
+                    boolean generatedId = fieldAnnoation.generatedId();
+                    String columnName = fieldAnnoation.columnName();
+                    boolean nullable = fieldAnnoation.nullable();
+                    if (!columnName.equals("")) {
+                        fieldName = columnName;
+                    }
+                    fieldDesc = fieldName + " " + ormTypeMapping.get(fieldType);
+                    if (generatedId) {
+                        fieldDesc += " NOT NULL AUTO_INCREMENT";
+                        primaryKey = fieldName;
+                    }
+
+                    if (!nullable) {
+                        fieldDesc += " NOT NULL";
+                    }
+                }
+                System.out.println("After processing, field name = " + fieldName);
+                query.append(((i == 0) ? "(" : "") + fieldDesc);
+                if (i == fields.length - 1) {
+                    if (primaryKey != null) {
+                        query.append(", PRIMARY KEY (" + primaryKey + ")");
+                    };
+                    query.append(");");
+                } else {
+                    query.append(",");
+                }
             }
             System.out.println("create table command = " + query);
+            //create table if not exists accounts (id integer NOT NULL AUTO_INCREMENT,name1 varchar(50) NOT NULL,password1 varchar(50), PRIMARY KEY id);
+
             Statement stmt = null;
             stmt = mConnection.createStatement();
             stmt.executeUpdate(query.toString());
             stmt.close();
         }
-
 
     }
 
@@ -98,16 +134,39 @@ public class DBConnection {
             List<String> columns = new ArrayList<String>();
             List<Object> values = new ArrayList<Object>();
             for (Field field : entityClass.getDeclaredFields()) {
-                Object o = runGetter(field, entity);
-                String fieldName = field.getName();
-                columns.add(fieldName);
-                Class<?> fieldClass = field.getType();
-                System.out.println("o = " + o);
-                if (fieldClass.equals(String.class)) {
-                    values.add("'" + o + "'");
+                if (field.isAnnotationPresent(DatabaseField.class)) {
+                    DatabaseField fieldAnnoation = (DatabaseField)field.getAnnotation(DatabaseField.class);
+                    boolean generatedId = fieldAnnoation.generatedId();
+                    String columnName = fieldAnnoation.columnName();
+                    boolean nullable = fieldAnnoation.nullable();
+                    if (!generatedId) {
+                        if (columnName.equals("")) {
+                            columns.add(field.getName());
+                        } else {
+                            columns.add(columnName);
+                        }
+                        Object o = runGetter(field, entity);
+                        Class<?> fieldClass = field.getType();
+                        System.out.println("o = " + o);
+                        if (fieldClass.equals(String.class)) {
+                            values.add("'" + o + "'");
+                        } else {
+                            values.add(o);
+                        }
+                    }
                 } else {
-                    values.add(o);
+                    String fieldName = field.getName();
+                    columns.add(fieldName);
+                    Object o = runGetter(field, entity);
+                    Class<?> fieldClass = field.getType();
+                    System.out.println("o = " + o);
+                    if (fieldClass.equals(String.class)) {
+                        values.add("'" + o + "'");
+                    } else {
+                        values.add(o);
+                    }
                 }
+
             }
             query.append("(");
             for (int i = 0; i < columns.size(); i++) {

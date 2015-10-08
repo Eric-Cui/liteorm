@@ -3,15 +3,13 @@ package DBHelper;
 import DBAnnotation.DatabaseField;
 import DBAnnotation.DatabaseTable;
 import Entity.Account;
+import sun.reflect.FieldAccessor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +69,7 @@ public class DBConnection {
 
                 if (field.isAnnotationPresent(DatabaseField.class)) {
                     DatabaseField fieldAnnoation = (DatabaseField)field.getAnnotation(DatabaseField.class);
+                    //get the databaseField from @DatabaseField(columnName = "name1", nullable = false)
                     boolean generatedId = fieldAnnoation.generatedId();
                     String columnName = fieldAnnoation.columnName();
                     boolean nullable = fieldAnnoation.nullable();
@@ -183,5 +182,44 @@ public class DBConnection {
             stmt.executeUpdate(query.toString());
             stmt.close();
         }
+
+
+    }
+    public <T> List<T> queryForAll(Class<T> entityClass) throws SQLException, IllegalAccessException, InstantiationException {
+        List<T> tList = new ArrayList<T>();
+        if (entityClass.isAnnotationPresent(DatabaseTable.class)) {
+            System.out.println("table class is annotated with DatabaseTable");
+
+            DatabaseTable tableAnnotation = (DatabaseTable) entityClass.getAnnotation(DatabaseTable.class);
+
+            String tableName = tableAnnotation.tableName(); // get tableName from @DatabaseTable(tableName = "accounts")
+            Statement stmt = mConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select * from " + tableName);
+
+            while (rs.next()) {
+                T element = entityClass.newInstance();
+                for (Field field : entityClass.getDeclaredFields()) {
+                    if (field.isAnnotationPresent(DatabaseField.class)) {
+                        DatabaseField fieldAnnoation = (DatabaseField) field.getAnnotation(DatabaseField.class);
+                        boolean generatedId = fieldAnnoation.generatedId();
+                        String columnName = fieldAnnoation.columnName();
+                        if (columnName.equals("")) {
+                            columnName = field.getName();
+                        }
+                        Class<?> fieldClass = field.getType();
+                        Object val = null;
+                        if (fieldClass.equals(String.class)) {
+                            val = rs.getString(columnName);
+                        } else if (fieldClass.equals(int.class)){
+                            val = rs.getInt(columnName);
+
+                        }
+                        field.set(element, val);
+                    }
+                }
+                tList.add(element);
+            }
+        }
+        return tList;
     }
 }

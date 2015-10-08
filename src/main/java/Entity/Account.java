@@ -11,13 +11,13 @@ public class Account {
 
 
     @DatabaseField(generatedId = true)
-    private int id;
+    public int id;
 
     @DatabaseField(columnName = "name1", nullable = false)
-    private String name;
+    public String name;
 
     @DatabaseField(columnName = "password1")
-    private String password;
+    public String password;
 
     public Account() {
     }
@@ -45,6 +45,6 @@ public class Account {
 
     @Override
     public String toString() {
-        return "name = " + name + " password = " + password;
+        return "id = " + id + " name = " + name + " password = " + password;
     }
 }

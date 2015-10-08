@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -25,7 +26,7 @@ public class Application {
         return defaultProps;
     }
 
-    public static void main(String[] args) throws IOException, SQLException, IllegalAccessException, InvocationTargetException {
+    public static void main(String[] args) throws IOException, SQLException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Properties defaultProps = getProperties();
         DBConnectionProperties dbConnectionProperties = new DBConnectionProperties(
                 defaultProps.getProperty("liteorm.datasource.driverClassName"),
@@ -34,8 +35,14 @@ public class Application {
                 defaultProps.getProperty("liteorm.datasource.url"));
         System.out.println("db connection properties = " + dbConnectionProperties);
         DBConnection connection = new DBConnection(dbConnectionProperties);
-        //connection.createTable(Account.class);
+        connection.createTable(Account.class);
         Account myAccount = new Account("Eric", "abcd");
         connection.insert(myAccount);
+        List<Account> accounts = connection.queryForAll(Account.class);
+        System.out.println("Account list-------------------");
+        for (Account account: accounts) {
+            System.out.println(account);
+        }
+
     }
 }

@@ -26,7 +26,7 @@ public class Application {
         return defaultProps;
     }
 
-    public static void main(String[] args) throws IOException, SQLException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public static void main(String[] args) throws Exception {
         Properties defaultProps = getProperties();
         DBConnectionProperties dbConnectionProperties = new DBConnectionProperties(
                 defaultProps.getProperty("liteorm.datasource.driverClassName"),
@@ -41,7 +41,10 @@ public class Application {
         System.out.println("myAccount before insert is " + myAccount);
         connection.insert(myAccount);
         System.out.println("myAccount after insert is " + myAccount);
-
+        connection.delete(myAccount);
+        connection.insert(myAccount);
+        myAccount.setName("Adam");
+        connection.update(myAccount);
         List<Account> accounts = connection.queryForAll(Account.class);
         System.out.println("Account list-------------------");
         for (Account account: accounts) {

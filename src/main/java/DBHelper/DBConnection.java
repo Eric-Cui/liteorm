@@ -108,6 +108,7 @@ public class DBConnection {
 
     }
 
+    // returning the field value of object o
     private <T> Object runGetter(Field field, T o) throws InvocationTargetException, IllegalAccessException {
         Class<?> entityClass = o.getClass();
         for (Method method : entityClass.getMethods())
@@ -121,6 +122,21 @@ public class DBConnection {
             }
         }
         return null;
+    }
+
+    private Method findGetIdMethod(Object object) throws Exception
+    {
+        Class co = object.getClass();
+        Method[] ml = co.getDeclaredMethods();
+        //String[] name = co.getName().split("\\.");
+        //String mn = "setid"+name[name.length-1];
+        //mn = mn.toLowerCase();
+        for(Method m : ml)
+        {
+            if(m.getName().toLowerCase().contains("setid"))
+                return m;
+        }
+        throw new IllegalArgumentException("cannot find setId() method of object");
     }
 
     public <T> void insert(T entity) throws IllegalAccessException, InvocationTargetException, SQLException {
@@ -177,10 +193,24 @@ public class DBConnection {
             }
             query.append(");");
             System.out.println("insert record command = " + query);
-            Statement stmt = null;
-            stmt = mConnection.createStatement();
-            stmt.executeUpdate(query.toString());
-            stmt.close();
+            //Statement stmt = null;
+            //stmt = mConnection.createStatement();
+            //stmt.executeUpdate(query.toString());
+            try (
+            PreparedStatement stmt = mConnection.prepareStatement(query.toString(), Statement.RETURN_GENERATED_KEYS);
+            ) {
+                int affectedRows = stmt.executeUpdate();
+                if (affectedRows == 0) {
+                    throw new SQLException("inserting record failed, no rows affected");
+                }
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        findGetIdMethod(entity).invoke(entity, generatedKeys.getInt(1));
+                    }
+                } catch (Exception e) {
+                    throw new SQLException("inserting record failed, no ID obtained");
+                }
+            }
         }
 
 

@@ -10,6 +10,7 @@ import DBAnnotation.DatabaseTable;
 public class Account {
 
 
+
     @DatabaseField(generatedId = true)
     public int id;
 
@@ -46,5 +47,14 @@ public class Account {
     @Override
     public String toString() {
         return "id = " + id + " name = " + name + " password = " + password;
+    }
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

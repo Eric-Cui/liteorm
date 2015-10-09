@@ -36,8 +36,12 @@ public class Application {
         System.out.println("db connection properties = " + dbConnectionProperties);
         DBConnection connection = new DBConnection(dbConnectionProperties);
         connection.createTable(Account.class);
+
         Account myAccount = new Account("Eric", "abcd");
+        System.out.println("myAccount before insert is " + myAccount);
         connection.insert(myAccount);
+        System.out.println("myAccount after insert is " + myAccount);
+
         List<Account> accounts = connection.queryForAll(Account.class);
         System.out.println("Account list-------------------");
         for (Account account: accounts) {

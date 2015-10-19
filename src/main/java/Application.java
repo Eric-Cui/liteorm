@@ -26,6 +26,65 @@ public class Application {
         return defaultProps;
     }
 
+    public static void crudTest(DBConnection connection) throws Exception {
+        Account myAccount = new Account("Eric", "abcd", 10000);
+        System.out.println("myAccount before insert is " + myAccount);
+        connection.insert(myAccount);
+        System.out.println("myAccount after insert is " + myAccount);
+
+        connection.delete(myAccount);
+
+        connection.insert(myAccount);
+
+        myAccount.setName("Adam");
+        connection.update(myAccount);
+
+        List<Account> accounts = connection.queryForAll(Account.class);
+        System.out.println("Account list-------------------");
+        for (Account account: accounts) {
+            System.out.println(account);
+        }
+    }
+
+    public static void unsafeTransactionTest(DBConnection connection) throws Exception {
+        Account account1 = new Account("account1", "abcd", 10000);
+        Account account2 = new Account("account2", "abcd", 0);
+        connection.insert(account1);
+        connection.insert(account2);
+        try {
+            for (int i = 0; i < 100; i++) {
+                account1.setNumber(account1.getNumber() - 100);
+                connection.update(account1);
+                account2.setNumber(account2.getNumber() + 100);
+                connection.update(account2);
+                if (i == 50)
+                    throw new Exception("Throwing exception, now check the accounts");
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
+    public static void safeTransactionTest(DBConnection connection) throws Exception {
+        Account account1 = new Account("account1", "abcd", 10000);
+        Account account2 = new Account("account2", "abcd", 0);
+        connection.insert(account1);
+        connection.insert(account2);
+        connection.getConnection().setAutoCommit(false);
+        try {
+            for (int i = 0; i < 100; i++) {
+                account1.setNumber(account1.getNumber() - 100);
+                connection.update(account1);
+                account2.setNumber(account2.getNumber() + 100);
+                connection.update(account2);
+                if (i == 50)
+                    throw new Exception("Throwing exception, now check the accounts");
+            }
+        } catch (Exception e) {
+            connection.getConnection().rollback();
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         Properties defaultProps = getProperties();
         DBConnectionProperties dbConnectionProperties = new DBConnectionProperties(
@@ -37,19 +96,8 @@ public class Application {
         DBConnection connection = new DBConnection(dbConnectionProperties);
         connection.createTable(Account.class);
 
-        Account myAccount = new Account("Eric", "abcd", 10000);
-        System.out.println("myAccount before insert is " + myAccount);
-        connection.insert(myAccount);
-        System.out.println("myAccount after insert is " + myAccount);
-        connection.delete(myAccount);
-        connection.insert(myAccount);
-        myAccount.setName("Adam");
-        connection.update(myAccount);
-        List<Account> accounts = connection.queryForAll(Account.class);
-        System.out.println("Account list-------------------");
-        for (Account account: accounts) {
-            System.out.println(account);
-        }
-
+        //crudTest(connection);
+        unsafeTransactionTest(connection);
+        safeTransactionTest(connection);
     }
 }

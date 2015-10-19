@@ -25,6 +25,10 @@ public class DBConnection {
         ormTypeMapping.put(int.class, "integer");
     }
 
+    public Connection getConnection(){
+        return mConnection;
+    }
+
 
     public DBConnection(DBConnectionProperties dbConnectionProperties) throws SQLException {
         mConnection = DriverManager.getConnection(dbConnectionProperties.getDataSourceUrl(),

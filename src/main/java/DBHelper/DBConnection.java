@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Created by cuiwei on 9/24/15.
@@ -307,6 +308,18 @@ public class DBConnection {
             Statement stmt = mConnection.createStatement();
             stmt.executeUpdate(query.toString());
             stmt.close();
+        }
+    }
+
+    public <V> void executeTransaction(Callable<V> callable) throws SQLException {
+        mConnection.setAutoCommit(false);
+        Savepoint savePoint = null;
+        try {
+            savePoint = mConnection.setSavepoint("savepoint_begin");
+            callable.call();
+            mConnection.commit();
+        } catch (Exception ex) {
+            mConnection.rollback(savePoint);
         }
     }
 }

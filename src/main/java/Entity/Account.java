@@ -20,12 +20,21 @@ public class Account {
     @DatabaseField(columnName = "password1")
     public String password;
 
+
+    @DatabaseField
+    public int number;
+
     public Account() {
     }
 
     public Account(String name, String password) {
+        this(name, password, 0);
+    }
+
+    public Account(String name, String password, int number) {
         this.name = name;
         this.password = password;
+        this.number = number;
     }
 
     public String getName() {
@@ -56,5 +65,14 @@ public class Account {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
     }
 }

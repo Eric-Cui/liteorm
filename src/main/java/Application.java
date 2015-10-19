@@ -37,7 +37,7 @@ public class Application {
         DBConnection connection = new DBConnection(dbConnectionProperties);
         connection.createTable(Account.class);
 
-        Account myAccount = new Account("Eric", "abcd");
+        Account myAccount = new Account("Eric", "abcd", 10000);
         System.out.println("myAccount before insert is " + myAccount);
         connection.insert(myAccount);
         System.out.println("myAccount after insert is " + myAccount);

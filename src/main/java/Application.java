@@ -124,10 +124,12 @@ public class Application {
         System.out.println("db connection properties = " + dbConnectionProperties);
         DBConnection connection = new DBConnection(dbConnectionProperties);
         connection.createTable(Account.class);
-
+        connection.getMetaData();
+        /*
         crudTest(connection);
         unsafeTransactionTest(connection);
         safeTransactionTest(connection);
         safeTransactionWithCallableTest(connection);
+        */
     }
 }

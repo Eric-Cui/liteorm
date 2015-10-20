@@ -37,6 +37,81 @@ public class DBConnection {
                 dbConnectionProperties.getDataSourcePassword());
     }
 
+    public void getMetaData() throws SQLException {
+        DatabaseMetaData databaseMetaData = mConnection.getMetaData();
+        int majorVersion = databaseMetaData.getDatabaseMajorVersion();
+        int minorVersion = databaseMetaData.getDatabaseMinorVersion();
+        String productName = databaseMetaData.getDatabaseProductName();
+        String productVersion = databaseMetaData.getDatabaseProductVersion();
+        int driverMajorVersion = databaseMetaData.getDriverMajorVersion();
+        int driverMinorVersion = databaseMetaData.getDriverMinorVersion();
+        System.out.println("Database major version = " + majorVersion + " minor version = " + minorVersion);
+        System.out.println("Product name = " + productName + " version = " + productVersion);
+        System.out.println("JDBC Driver major version = " + driverMajorVersion + " minor version = " + minorVersion);
+        System.out.println();
+
+        System.out.println("Supports get generated keys = " + databaseMetaData.supportsGetGeneratedKeys());
+        System.out.println("Supports group by = " + databaseMetaData.supportsGroupBy());
+        System.out.println("Supports outer joins = " + databaseMetaData.supportsOuterJoins());
+        System.out.println();
+        
+        String catalog = null;
+        String schemaPattern = null;
+        String tableNamePattern = null;
+        String[] types = null;
+        ResultSet tableRs = databaseMetaData.getTables(catalog, schemaPattern, tableNamePattern, types);
+        System.out.println("Getting tables metadata ********");
+        while (tableRs.next()) {
+            String tableName = tableRs.getString(3);
+            System.out.println("Database catalog = " + tableRs.getString(1) +
+                                " table name = " + tableName);
+            Map<String, String> columnNameTypes = getTableColumnDefinitions(databaseMetaData, tableName);
+            for (Map.Entry<String, String> entry: columnNameTypes.entrySet()) {
+                System.out.println("    column name = " + entry.getKey() + " type = " + entry.getValue());
+            }
+            List<String> primaryKeyList = getTablePrimaryKey(databaseMetaData, tableName);
+            for (String primaryKey: primaryKeyList) {
+                System.out.println("primary key column = " + primaryKey);
+            }
+
+        }
+    }
+
+    private List<String> getTablePrimaryKey(DatabaseMetaData databaseMetaData, String tableName) throws SQLException {
+        ResultSet primaryKeyRs = databaseMetaData.getPrimaryKeys(null, null, tableName);
+        List<String> primaryKeyList = new ArrayList<>();
+        while (primaryKeyRs.next()) {
+            primaryKeyList.add(primaryKeyRs.getString(4));
+        }
+        return primaryKeyList;
+    }
+
+    private Map<String, String> getTableColumnDefinitions(DatabaseMetaData databaseMetaData, String tableName) throws SQLException {
+        ResultSet columnRs = databaseMetaData.getColumns(null, null, tableName, null);
+        Map<String, String> columnNameTypes = new HashMap<>();
+        while (columnRs.next()) {
+            String columnName = columnRs.getString(4);
+            int columnType = columnRs.getInt(5);
+            columnNameTypes.put(columnName, getJdbcTypeName(columnType));
+
+        }
+        return columnNameTypes;
+    }
+
+    private String getJdbcTypeName(int jdbcType) {
+        Field[] fields = java.sql.Types.class.getFields();
+        for (int i = 0; i < fields.length; i++) {
+            try {
+                Integer value = (Integer) fields[i].get(null);
+                if (value == jdbcType) {
+                    return fields[i].getName();
+                }
+            } catch (IllegalAccessException e) {
+            }
+        }
+        return null;
+    }
+
     public void createTable(Class<?> tableClass) throws SQLException {
         if (tableClass.isAnnotationPresent(DatabaseTable.class)) {
             DatabaseTable tableAnnotation = (DatabaseTable)tableClass.getAnnotation(DatabaseTable.class);

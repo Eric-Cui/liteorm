@@ -29,19 +29,23 @@ public class Application {
 
     public static void crudTest(DBConnection connection) throws Exception {
         Account myAccount = new Account("Eric", "abcd", 10000);
+        int rowsAffected;
         System.out.println("myAccount before insert is " + myAccount);
-        connection.insert(myAccount);
+        rowsAffected = connection.insert(myAccount);
+        System.out.println(rowsAffected + " records have been updated");
         System.out.println("myAccount after insert is " + myAccount);
 
-        connection.delete(myAccount);
+        rowsAffected = connection.delete(myAccount);
+        System.out.println(rowsAffected + " records have been deleted");
 
         connection.insert(myAccount);
 
         myAccount.setName("Adam");
-        connection.update(myAccount);
+        rowsAffected = connection.update(myAccount);
+        System.out.println(rowsAffected + " records have been updated");
 
         List<Account> accounts = connection.queryForAll(Account.class);
-        System.out.println("Account list-------------------");
+        System.out.println("Returning accounts record " + accounts.size());
         for (Account account: accounts) {
             System.out.println(account);
         }
@@ -121,7 +125,7 @@ public class Application {
         DBConnection connection = new DBConnection(dbConnectionProperties);
         connection.createTable(Account.class);
 
-        //crudTest(connection);
+        crudTest(connection);
         unsafeTransactionTest(connection);
         safeTransactionTest(connection);
         safeTransactionWithCallableTest(connection);

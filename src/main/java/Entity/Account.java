@@ -55,7 +55,7 @@ public class Account {
 
     @Override
     public String toString() {
-        return "id = " + id + " name = " + name + " password = " + password;
+        return "id = " + id + " name = " + name + " password = " + password + " number = " + number;
     }
 
 

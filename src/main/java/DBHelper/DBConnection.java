@@ -123,8 +123,9 @@ public class DBConnection {
         throw new IllegalArgumentException("cannot find " + methodName + " method of object");
     }
 
-    public <T> void insert(T entity) throws IllegalAccessException, InvocationTargetException, SQLException {
+    public <T> int insert(T entity) throws IllegalAccessException, InvocationTargetException, SQLException {
         Class<?> entityClass = entity.getClass();
+        int affectedRows = 0;
         if (entityClass.isAnnotationPresent(DatabaseTable.class)) {
             DatabaseTable tableAnnotation = (DatabaseTable) entityClass.getAnnotation(DatabaseTable.class);
             String tableName = tableAnnotation.tableName();
@@ -181,7 +182,7 @@ public class DBConnection {
             try (
             PreparedStatement stmt = mConnection.prepareStatement(query.toString(), Statement.RETURN_GENERATED_KEYS);
             ) {
-                int affectedRows = stmt.executeUpdate();
+                affectedRows = stmt.executeUpdate();
                 if (affectedRows == 0) {
                     throw new SQLException("inserting record failed, no rows affected");
                 }
@@ -194,9 +195,9 @@ public class DBConnection {
                 }
             }
         }
-
-
+        return affectedRows;
     }
+
     public <T> List<T> queryForAll(Class<T> entityClass) throws SQLException, IllegalAccessException, InstantiationException {
         List<T> tList = new ArrayList<T>();
         if (entityClass.isAnnotationPresent(DatabaseTable.class)) {
@@ -252,7 +253,8 @@ public class DBConnection {
         return rowsAffected;
     }
 
-    public <T> void update(T entity) throws Exception {
+    public <T> int update(T entity) throws Exception {
+        int rowsAffected = 0;
         int id = (int)findMethod(entity, "getid").invoke(entity);
         Class<?> entityClass = entity.getClass();
         // "update accounts set name1='Adam' , password1='cdef' where id=3
@@ -291,9 +293,10 @@ public class DBConnection {
             query.append(" where id = " + id);
             System.out.println("Executing updating record command: " + query);
             Statement stmt = mConnection.createStatement();
-            stmt.executeUpdate(query.toString());
+            rowsAffected = stmt.executeUpdate(query.toString());
             stmt.close();
         }
+        return rowsAffected;
     }
 
     public <V> void executeTransaction(Callable<V> callable) throws SQLException {

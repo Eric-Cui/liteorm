@@ -38,20 +38,7 @@ public class DBConnection {
     }
 
     public void createTable(Class<?> tableClass) throws SQLException {
-        /*
-        Annotation[] annotations = tableClass.getAnnotations();
-        for (Annotation annotation: annotations) {
-            System.out.println("annotation " + annotation);
-        }
-        for (Method m: table.getDeclaredMethods()) {
-            if (m.isAnnotationPresent(table)) {
-                System.out.println("Annotation found " + m);
-            }
-        }*/
-        //String tableName = tableClass.getSimpleName();
         if (tableClass.isAnnotationPresent(DatabaseTable.class)) {
-            System.out.println("table class is annotated with DatabaseTable");
-
             DatabaseTable tableAnnotation = (DatabaseTable)tableClass.getAnnotation(DatabaseTable.class);
 
             String tableName = tableAnnotation.tableName(); // get tableName from @DatabaseTable(tableName = "accounts")
@@ -66,7 +53,6 @@ public class DBConnection {
                 Field field = fields[i];
                 String fieldName = field.getName(); // id, name, ,password
                 Class<?> fieldType = field.getType(); //int, String
-                System.out.println("field name = " + fieldName + " type = " + fieldType);
                 String fieldDesc = null;
 
                 if (field.isAnnotationPresent(DatabaseField.class)) {
@@ -88,7 +74,6 @@ public class DBConnection {
                         fieldDesc += " NOT NULL";
                     }
                 }
-                System.out.println("After processing, field name = " + fieldName);
                 query.append(((i == 0) ? "(" : "") + fieldDesc);
                 if (i == fields.length - 1) {
                     if (primaryKey != null) {
@@ -99,7 +84,7 @@ public class DBConnection {
                     query.append(",");
                 }
             }
-            System.out.println("create table command = " + query);
+            System.out.println("Executing creating table command: " + query);
             //create table if not exists accounts (id integer NOT NULL AUTO_INCREMENT,name1 varchar(50) NOT NULL,password1 varchar(50), PRIMARY KEY id);
 
             Statement stmt = null;
@@ -161,7 +146,6 @@ public class DBConnection {
                         }
                         Object o = runGetter(field, entity);
                         Class<?> fieldClass = field.getType();
-                        System.out.println("o = " + o);
                         if (fieldClass.equals(String.class)) {
                             values.add("'" + o + "'");
                         } else {
@@ -173,7 +157,6 @@ public class DBConnection {
                     columns.add(fieldName);
                     Object o = runGetter(field, entity);
                     Class<?> fieldClass = field.getType();
-                    System.out.println("o = " + o);
                     if (fieldClass.equals(String.class)) {
                         values.add("'" + o + "'");
                     } else {
@@ -191,7 +174,7 @@ public class DBConnection {
                 query.append(values.get(i) + ((i == values.size() -1) ? "": ","));
             }
             query.append(");");
-            System.out.println("insert record command = " + query);
+            System.out.println("Executing inserting record command: " + query);
             //Statement stmt = null;
             //stmt = mConnection.createStatement();
             //stmt.executeUpdate(query.toString());
@@ -217,7 +200,6 @@ public class DBConnection {
     public <T> List<T> queryForAll(Class<T> entityClass) throws SQLException, IllegalAccessException, InstantiationException {
         List<T> tList = new ArrayList<T>();
         if (entityClass.isAnnotationPresent(DatabaseTable.class)) {
-            System.out.println("table class is annotated with DatabaseTable");
 
             DatabaseTable tableAnnotation = (DatabaseTable) entityClass.getAnnotation(DatabaseTable.class);
 
@@ -252,18 +234,22 @@ public class DBConnection {
         return tList;
     }
 
-    public <T> void delete(T entity) throws Exception {
+    public <T> int delete(T entity) throws Exception {
         int id = (int)findMethod(entity, "getid").invoke(entity);
         Class<?> entityClass = entity.getClass();
+        int rowsAffected = 0;
         if (entityClass.isAnnotationPresent(DatabaseTable.class)) {
             DatabaseTable tableAnnotation = (DatabaseTable) entityClass.getAnnotation(DatabaseTable.class);
             String tableName = tableAnnotation.tableName();
             StringBuilder query = new StringBuilder();
-            query.append("delete from " + tableName + " where id = " + id);
+            String cmd = "delete from " + tableName + " where id = " + id;
+            System.out.println("Executing deleting record command: " + cmd);
+            query.append(cmd);
             Statement stmt = mConnection.createStatement();
-            stmt.executeUpdate(query.toString());
+            rowsAffected = stmt.executeUpdate(query.toString());
             stmt.close();
         }
+        return rowsAffected;
     }
 
     public <T> void update(T entity) throws Exception {
@@ -296,7 +282,6 @@ public class DBConnection {
                 query.append(columnName + " = ");
                 Class<?> fieldClass = field.getType();
                 Object o = runGetter(field, entity);
-                System.out.println("*** update o = " + o);
                 if (fieldClass.equals(String.class)) {
                     query.append("'" + o + "'");
                 } else {
@@ -304,7 +289,7 @@ public class DBConnection {
                 }
             }
             query.append(" where id = " + id);
-            System.out.println("****** update query = " + query);
+            System.out.println("Executing updating record command: " + query);
             Statement stmt = mConnection.createStatement();
             stmt.executeUpdate(query.toString());
             stmt.close();

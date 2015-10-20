@@ -48,17 +48,17 @@ public class Application {
     }
 
     public static void unsafeTransactionTest(DBConnection connection) throws Exception {
-        Account account1 = new Account("account1", "abcd", 10000);
+        Account account1 = new Account("account1", "abcd", 1000);
         Account account2 = new Account("account2", "abcd", 0);
         connection.insert(account1);
         connection.insert(account2);
         try {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10; i++) {
                 account1.setNumber(account1.getNumber() - 100);
                 connection.update(account1);
                 account2.setNumber(account2.getNumber() + 100);
                 connection.update(account2);
-                if (i == 50)
+                if (i == 4)
                     throw new Exception("Throwing exception, now check the accounts");
             }
         } catch (Exception e) {
@@ -67,18 +67,18 @@ public class Application {
     }
 
     public static void safeTransactionTest(DBConnection connection) throws Exception {
-        Account account1 = new Account("account3", "abcd", 10000);
+        Account account1 = new Account("account3", "abcd", 1000);
         Account account2 = new Account("account4", "abcd", 0);
         connection.insert(account1);
         connection.insert(account2);
         connection.getConnection().setAutoCommit(false);
         try {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10; i++) {
                 account1.setNumber(account1.getNumber() - 100);
                 connection.update(account1);
                 account2.setNumber(account2.getNumber() + 100);
                 connection.update(account2);
-                if (i == 50)
+                if (i == 4)
                     throw new Exception("Throwing exception, now check the accounts");
             }
         } catch (Exception e) {
@@ -89,7 +89,7 @@ public class Application {
     }
 
     public static void safeTransactionWithCallableTest(DBConnection connection) throws IllegalAccessException, SQLException, InvocationTargetException {
-        Account account1 = new Account("account5", "abcd", 10000);
+        Account account1 = new Account("account5", "abcd", 1000);
         Account account2 = new Account("account6", "abcd", 0);
         connection.insert(account1);
         connection.insert(account2);
@@ -97,12 +97,12 @@ public class Application {
             @Override
             public Void call() throws Exception {
                 System.out.println("Callable called");
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 10; i++) {
                     account1.setNumber(account1.getNumber() - 100);
                     connection.update(account1);
                     account2.setNumber(account2.getNumber() + 100);
                     connection.update(account2);
-                    if (i == 50)
+                    if (i == 4)
                         throw new Exception("Throwing exception, now check the accounts");
                 }
                 return null;

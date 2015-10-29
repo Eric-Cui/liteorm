@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
@@ -139,9 +140,12 @@ public class Application {
 
     private static void storedProcedureTest(DBConnection connection) throws SQLException {
         Connection rawConnection = connection.getConnection();
-        CallableStatement cs = rawConnection.prepareCall("{call update_password(?, ?)}");
-        cs.setString(1, "account6");
+        CallableStatement cs = rawConnection.prepareCall("{call update_password(?, ?, ?)}");
+        cs.setString(1, "Eric");
         cs.setString(2, "eeee");
+        cs.registerOutParameter(3, Types.INTEGER);
         cs.execute();
+        int affectedRows = cs.getInt(3);
+        System.out.println("Updated password for " + affectedRows + " users");
     }
 }

@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
  * Created by cuiwei on 9/24/15.
  */
 
-public class DBConnection {
+public class DBManager {
 
     private Connection mConnection;
     private static Map<Class<?>, String> ormTypeMapping = new HashMap<Class<?>, String>();
@@ -31,7 +31,7 @@ public class DBConnection {
     }
 
 
-    public DBConnection(DBConnectionProperties dbConnectionProperties) throws SQLException {
+    public DBManager(DBConnectionProperties dbConnectionProperties) throws SQLException {
         mConnection = DriverManager.getConnection(dbConnectionProperties.getDataSourceUrl(),
                 dbConnectionProperties.getDataSourceUserName(),
                 dbConnectionProperties.getDataSourcePassword());

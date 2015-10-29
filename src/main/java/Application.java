@@ -1,9 +1,7 @@
-import DBHelper.DBConnection;
+import DBHelper.DBManager;
 import DBHelper.DBConnectionProperties;
 import Entity.Account;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +28,7 @@ public class Application {
         return defaultProps;
     }
 
-    public static void crudTest(DBConnection connection) throws Exception {
+    public static void crudTest(DBManager connection) throws Exception {
         Account myAccount = new Account("Eric", "abcd", 10000);
         int rowsAffected;
         System.out.println("myAccount before insert is " + myAccount);
@@ -54,7 +52,7 @@ public class Application {
         }
     }
 
-    public static void unsafeTransactionTest(DBConnection connection) throws Exception {
+    public static void unsafeTransactionTest(DBManager connection) throws Exception {
         Account account1 = new Account("account1", "abcd", 1000);
         Account account2 = new Account("account2", "abcd", 0);
         connection.insert(account1);
@@ -73,7 +71,7 @@ public class Application {
         }
     }
 
-    public static void safeTransactionTest(DBConnection connection) throws Exception {
+    public static void safeTransactionTest(DBManager connection) throws Exception {
         Account account1 = new Account("account3", "abcd", 1000);
         Account account2 = new Account("account4", "abcd", 0);
         connection.insert(account1);
@@ -95,7 +93,7 @@ public class Application {
         }
     }
 
-    public static void safeTransactionWithCallableTest(DBConnection connection) throws IllegalAccessException, SQLException, InvocationTargetException {
+    public static void safeTransactionWithCallableTest(DBManager connection) throws IllegalAccessException, SQLException, InvocationTargetException {
         Account account1 = new Account("account5", "abcd", 1000);
         Account account2 = new Account("account6", "abcd", 0);
         connection.insert(account1);
@@ -125,7 +123,7 @@ public class Application {
                 defaultProps.getProperty("liteorm.datasource.password"),
                 defaultProps.getProperty("liteorm.datasource.url"));
         System.out.println("db connection properties = " + dbConnectionProperties);
-        DBConnection connection = new DBConnection(dbConnectionProperties);
+        DBManager connection = new DBManager(dbConnectionProperties);
                 /*
         connection.createTable(Account.class);
         connection.getMetaData();
@@ -138,7 +136,7 @@ public class Application {
         storedProcedureTest(connection);
     }
 
-    private static void storedProcedureTest(DBConnection connection) throws SQLException {
+    private static void storedProcedureTest(DBManager connection) throws SQLException {
         Connection rawConnection = connection.getConnection();
         CallableStatement cs = rawConnection.prepareCall("{call update_password(?, ?, ?)}");
         cs.setString(1, "Eric");

@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
@@ -123,13 +125,23 @@ public class Application {
                 defaultProps.getProperty("liteorm.datasource.url"));
         System.out.println("db connection properties = " + dbConnectionProperties);
         DBConnection connection = new DBConnection(dbConnectionProperties);
+                /*
         connection.createTable(Account.class);
         connection.getMetaData();
-        /*
+
         crudTest(connection);
         unsafeTransactionTest(connection);
         safeTransactionTest(connection);
         safeTransactionWithCallableTest(connection);
         */
+        storedProcedureTest(connection);
+    }
+
+    private static void storedProcedureTest(DBConnection connection) throws SQLException {
+        Connection rawConnection = connection.getConnection();
+        CallableStatement cs = rawConnection.prepareCall("{call update_password(?, ?)}");
+        cs.setString(1, "account6");
+        cs.setString(2, "eeee");
+        cs.execute();
     }
 }
